@@ -28,7 +28,7 @@ impl<T: CardTransport> KeycardSecureChannelExt for KeycardSecureChannel<T> {
 }
 
 /// Callback function type for requesting pairing information
-pub type PairingCallback = Box<dyn Fn() -> PairingInfo + Send + Sync>;
+pub type PairingCallback = Box<dyn Fn() -> crate::Result<PairingInfo> + Send + Sync>;
 
 /// Provider for pairing information
 pub enum PairingProvider {
@@ -51,7 +51,7 @@ impl PairingProvider {
 }
 
 /// Callback function type for requesting PIN
-pub type PinCallback = Box<dyn Fn() -> String + Send + Sync>;
+pub type PinCallback = Box<dyn Fn() -> crate::Result<String> + Send + Sync>;
 
 /// Provider for PIN information
 pub enum PinProvider {
@@ -204,7 +204,7 @@ impl<T: CardTransport> KeycardSecureChannel<T> {
                     Some(PairingProvider::Info(info)) => info,
                     Some(PairingProvider::Callback(callback)) => {
                         // Call the callback to get the pairing info
-                        let info = callback();
+                        let info = callback()?;
                         // Replace the callback with the obtained info to avoid calling it again
                         self.pairing_provider = Some(PairingProvider::Info(info.clone()));
                         match &self.pairing_provider {
@@ -503,7 +503,10 @@ impl<T: CardTransport> SecureChannel for KeycardSecureChannel<T> {
             // Verify PIN using the provider
             let pin = match &self.pin_provider {
                 Some(PinProvider::Pin(pin)) => pin.clone(),
-                Some(PinProvider::Callback(callback)) => callback(),
+                Some(PinProvider::Callback(callback)) => callback().map_err(|e| {
+                    warn!("PIN callback failed: {e}");
+                    Error::other("PIN callback failed")
+                })?,
                 None => {
                     return Err(Error::other(
                         "PIN required for authentication but no PIN provider available",
