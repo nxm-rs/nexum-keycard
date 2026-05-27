@@ -4,7 +4,9 @@ use std::path::PathBuf;
 
 use cipher::Key;
 use nexum_apdu_core::prelude::*;
-use nexum_apdu_globalplatform::{GPSecureChannel, GlobalPlatform, load::LoadCommandStream, session::Keys};
+use nexum_apdu_globalplatform::{
+    GPSecureChannel, GlobalPlatform, load::LoadCommandStream, session::Keys,
+};
 use nexum_apdu_transport_pcsc::PcscTransport;
 
 // Constants for keycard package identification
