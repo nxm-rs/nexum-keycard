@@ -588,6 +588,12 @@ where
             return Err(Error::UserCancelled);
         }
 
+        // FACTORY RESET (CLA=0x80, INS=0xFD) is an applet-level APDU.
+        // On a freshly-connected card the Issuer Security Domain is
+        // still selected, so the ISD answers SW=0x6D00. Re-SELECT the
+        // applet first; no harm if it was already selected.
+        let _ = select_keycard_with_transport(self.executor.transport_mut())?;
+
         // Create the factory reset command
         let cmd = FactoryResetCommand::reset();
 
