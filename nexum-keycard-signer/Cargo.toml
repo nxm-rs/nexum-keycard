@@ -34,5 +34,11 @@ nexum-apdu-core.workspace = true
 tokio = { workspace = true, features = ["sync"] }
 
 [dev-dependencies]
-alloy = "1.0"
+# The example builds a full provider stack; we depend on the
+# individual alloy-* crates rather than the `alloy` meta-crate to
+# avoid pulling features we don't need.
+alloy-network = { workspace = true }
+alloy-primitives = { workspace = true }
+alloy-provider = { version = "2", default-features = false, features = ["reqwest"] }
+alloy-rpc-types-eth = { version = "2", default-features = false }
 tokio = { workspace = true, features = ["rt-multi-thread"] }

@@ -1,0 +1,96 @@
+[workspace.package]
+version = "0.2.0"
+edition = "2024"
+rust-version = "1.94"
+license = "AGPL-3.0-or-later"
+homepage = "https://nxm.rs"
+repository = "https://github.com/nxm-rs/nexum-keycard"
+exclude = [".github/"]
+authors = ["Nexum Contributors"]
+
+[workspace]
+members = [
+    "nexum-keycard",
+    "nexum-keycard-signer",
+    "nexum-keycard-cli",
+]
+resolver = "2"
+
+[workspace.lints.rust]
+missing-debug-implementations = "warn"
+missing-docs = "warn"
+unreachable-pub = "warn"
+unused-must-use = "deny"
+rust-2018-idioms = "deny"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+missing-const-for-fn = "warn"
+use-self = "warn"
+option-if-let-else = "warn"
+redundant-clone = "warn"
+
+[workspace.dependencies]
+# self
+nexum-keycard = { version = "0.2", path = "nexum-keycard" }
+nexum-keycard-signer = { version = "0.2", path = "nexum-keycard-signer" }
+
+# nexum-apdu — pinned to a commit on nxm-rs/nexum-apdu until that
+# crate set is published to crates.io.
+nexum-apdu-core = { git = "https://github.com/nxm-rs/nexum-apdu", rev = "e5204d67f294b2dc565c107bc917d372e1df856f" }
+nexum-apdu-globalplatform = { git = "https://github.com/nxm-rs/nexum-apdu", rev = "e5204d67f294b2dc565c107bc917d372e1df856f" }
+nexum-apdu-macros = { git = "https://github.com/nxm-rs/nexum-apdu", rev = "e5204d67f294b2dc565c107bc917d372e1df856f" }
+nexum-apdu-transport-pcsc = { git = "https://github.com/nxm-rs/nexum-apdu", rev = "e5204d67f294b2dc565c107bc917d372e1df856f" }
+
+# alloy 2.x — bumped from 1.x for binary-size dedup with downstream
+# consumers (helios + mobile wallets) that have already moved to 2.
+alloy-primitives = { version = "1", default-features = false }
+alloy-network = { version = "2", default-features = false }
+alloy-signer = { version = "2", default-features = false }
+alloy-consensus = { version = "2", default-features = false }
+
+# crypto
+aes = { version = "0.8", default-features = false }
+cbc = { version = "0.1", default-features = false }
+cbc-mac = { version = "0.1", default-features = false }
+cipher = { version = "0.4", default-features = false }
+k256 = { version = "0.13", features = ["ecdsa", "ecdh"] }
+pbkdf2 = "0.12"
+sha2 = "0.10"
+zeroize = { version = "1", features = ["derive"] }
+block-padding = "0.3"
+
+# RNG — `rand` is the modern workspace pin (0.10); `rand_v8` aliases
+# rand 0.8 because k256 0.13's `SecretKey::random` takes a
+# `rand_core 0.6` RNG that only rand 0.8 implements. Both are
+# expected to remain until k256 0.14 stabilises.
+rand = "0.10"
+rand_v8 = { version = "0.8", package = "rand" }
+
+# bip32 / bip39 / wordlists
+coins-bip32 = { version = "0.12", default-features = false }
+coins-bip39 = { version = "0.12", default-features = false }
+
+# bytes + encoding
+bytes = { version = "1", default-features = false }
+base64 = "0.22"
+hex = "0.4"
+iso7816-tlv = "0.4"
+unicode-normalization = "0.1"
+generic-array = "0.14"
+
+# error + logging
+anyhow = "1"
+thiserror = { version = "2", default-features = false }
+tracing = { version = "0.1", default-features = false }
+tracing-subscriber = { version = "0.3", default-features = false, features = ["env-filter", "serde"] }
+derive_more = { version = "2", default-features = false, features = ["display"] }
+
+# async
+async-trait = "0.1"
+tokio = { version = "1", features = ["full"] }
+parking_lot = "0.12"
+
+# cli
+clap = { version = "4", features = ["derive"] }
+colored = "3"

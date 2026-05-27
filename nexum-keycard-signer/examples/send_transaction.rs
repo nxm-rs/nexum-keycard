@@ -2,12 +2,10 @@
 
 use std::{str::FromStr, sync::Arc};
 
-use alloy::{
-    network::TransactionBuilder,
-    primitives::{U256, address},
-    providers::{Provider, ProviderBuilder},
-    rpc::types::transaction::TransactionRequest,
-};
+use alloy_network::TransactionBuilder;
+use alloy_primitives::{U256, address};
+use alloy_provider::{Provider, ProviderBuilder};
+use alloy_rpc_types_eth::TransactionRequest;
 use nexum_keycard::{Keycard, PairingInfo, PcscDeviceManager};
 use nexum_keycard_signer::{DerivationPath, KeycardSigner};
 

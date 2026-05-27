@@ -1,6 +1,6 @@
 use base64::prelude::*;
 use bytes::{BufMut, Bytes, BytesMut};
-use rand::{Rng, RngCore};
+use rand::{Rng, RngExt};
 
 use crate::{
     AppletVersion,

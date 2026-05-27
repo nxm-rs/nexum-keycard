@@ -4,7 +4,7 @@ use alloy_primitives::hex::{self, encode};
 use bytes::{Bytes, BytesMut};
 use k256::elliptic_curve::generic_array::GenericArray;
 use nexum_apdu_core::prelude::*;
-use rand::{RngCore, rng};
+use rand::{Rng, rng};
 use sha2::{Digest, Sha256};
 use tracing::{debug, trace, warn};
 

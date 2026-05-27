@@ -8,7 +8,7 @@ use alloy_primitives::hex;
 use clap::Args;
 use coins_bip32::path::DerivationPath;
 use nexum_keycard::PairingInfo;
-use rand::Rng;
+use rand::RngExt;
 use rand::distr::Alphanumeric;
 use std::error::Error;
 use std::fs::File;

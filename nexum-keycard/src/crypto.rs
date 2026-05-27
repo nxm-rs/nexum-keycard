@@ -8,7 +8,7 @@ use cipher::block_padding::UnpadError;
 use generic_array::GenericArray;
 use k256::{PublicKey, SecretKey, ecdh::SharedSecret, elliptic_curve::sec1::ToEncodedPoint};
 use pbkdf2::pbkdf2_hmac;
-use rand::RngCore;
+use rand::Rng;
 use sha2::{Digest, Sha256, Sha512};
 use unicode_normalization::UnicodeNormalization;
 

@@ -1,7 +1,7 @@
 use nexum_apdu_macros::apdu_pair;
 
 use nexum_apdu_globalplatform::constants::status::*;
-use rand::RngCore;
+use rand::Rng;
 
 use crate::types::Signature;
 
