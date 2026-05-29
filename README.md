@@ -1,127 +1,164 @@
-# nexum-keycard: Rust Implementation for Keycards
+<p align="center">
+  <img src=".github/banner.svg" alt="Nexum · keycard — Rust SDK + CLI for Status Keycards" width="100%" />
+</p>
 
-`nexum-keycard` is a comprehensive toolkit for interacting with Keycards - secure smart cards designed for blockchain applications and cryptocurrency key management. This implementation provides a complete solution for Keycard operations in Rust.
+# Nexum · keycard
 
-<!-- [![docs.rs](https://img.shields.io/docsrs/nexum-keycard/latest)](https://docs.rs/nexum-keycard) -->
-<!-- [![Crates.io](https://img.shields.io/crates/v/nexum-keycard)](https://crates.io/crates/nexum-keycard) -->
+A Rust toolkit for **Status Keycards** — smart cards that hold keys in a secure element and sign over an APDU channel. This workspace ships the core SDK, an Ethereum signer that plugs into [alloy](https://github.com/alloy-rs/alloy), and a CLI for hands-on card administration.
 
-Build secure blockchain applications with hardware-backed security and the power of Rust.
+Nexum uses Keycards as a hardware-bound signing path for the [wallet](https://github.com/nxm-rs/wallet): the seed never leaves the card, the wallet talks to it over NFC on the phone or PC/SC on a desktop reader.
 
-## Installation
+> Looking for the org overview? See **[github.com/nxm-rs](https://github.com/nxm-rs)**.
 
-The easiest way to get started is to add the core crate:
+---
 
-```sh
+## Status
+
+| | |
+|---|---|
+| Version | **0.2.0** · pre-release |
+| MSRV | Rust 1.94 · edition 2024 |
+| Transports | PC/SC (this repo) · NFC (see [nxm-rs/wallet](https://github.com/nxm-rs/wallet) `nexum-apdu-transport-nfc`) |
+| Upstream applet | [status-im/status-keycard](https://github.com/status-im/status-keycard) |
+| License | [AGPL-3.0-or-later](./LICENSE) |
+
+> Pre-release. APIs may change. Not yet on crates.io.
+
+---
+
+## Crates
+
+| Crate | What it is |
+|---|---|
+| **[`nexum-keycard`](./nexum-keycard)** | Core SDK: SELECT, INIT, pairing, secure channel, derive, sign |
+| **[`nexum-keycard-signer`](./nexum-keycard-signer)** | `alloy::signers::Signer` implementation backed by a Keycard |
+| **[`nexum-keycard-cli`](./nexum-keycard-cli)** | Command-line tool for initialisation, pairing, key derivation, signing |
+
+Path note: **this repo was renamed** from `nexum-keycard` to `keycard` on 2026-05-29. GitHub redirects old URLs. Crate names (`nexum-keycard*`) are unchanged for now to keep `cargo add` working.
+
+---
+
+## Install
+
+```bash
+# Core SDK (when published):
 cargo add nexum-keycard
-```
 
-For blockchain signing capabilities:
-
-```sh
+# Ethereum signing:
 cargo add nexum-keycard-signer
-```
 
-For the command-line interface:
-
-```sh
+# CLI:
 cargo install nexum-keycard-cli
 ```
 
-## Quick Start
+Until the crates land on crates.io, depend by git rev:
+
+```toml
+nexum-keycard = { git = "https://github.com/nxm-rs/keycard", rev = "..." }
+```
+
+---
+
+## Quickstart
 
 ```rust
 use nexum_keycard::{Keycard, PcscDeviceManager, CardExecutor, Error};
 
 fn main() -> Result<(), Error> {
-    // Create a PC/SC transport
-    let manager = PcscDeviceManager::new()?;
-    let readers = manager.list_readers()?;
-    let reader = readers.iter().find(|r| r.has_card()).expect("No card present");
+    let manager   = PcscDeviceManager::new()?;
+    let readers   = manager.list_readers()?;
+    let reader    = readers.iter().find(|r| r.has_card()).expect("no card present");
     let transport = manager.open_reader(reader.name())?;
 
-    // Create a card executor
     let mut executor = CardExecutor::new_with_defaults(transport);
+    let mut keycard  = Keycard::new(&mut executor);
 
-    // Create a Keycard instance and select the applet
-    let mut keycard = Keycard::new(&mut executor);
-    let app_info = keycard.select_keycard()?;
+    let info = keycard.select_keycard()?;
+    println!("applet {} · instance {}", info.version, info.instance_uid);
 
-    println!("Selected Keycard with instance: {}", app_info.instance_uid);
-    println!("Applet version: {}", app_info.version);
-
-    // Initialize a new card (if needed)
-    if !app_info.initialized() {
+    if !info.initialized() {
         let secrets = keycard.init(None, None, None)?;
-        println!("Card initialized with:\nPIN: {}\nPUK: {}\nPairing password: {}",
+        println!("PIN: {}\nPUK: {}\nPAIRING: {}",
                  secrets.pin(), secrets.puk(), secrets.pairing_password());
     }
-
     Ok(())
 }
 ```
 
-## Overview
+The CLI mirrors the SDK — see [`nexum-keycard-cli/README.md`](./nexum-keycard-cli/README.md) for command reference (init, pair, status, derive, sign).
 
-This repository contains the following crates:
+---
 
-- [`nexum-keycard`]: Core functionality for interacting with Keycards
-- [`nexum-keycard-signer`]: Alloy signer implementation for blockchain operations
-- [`nexum-keycard-cli`]: Command-line interface for Keycard management
+## CLI cheatsheet
 
-[`nexum-keycard`]: https://github.com/nxm-rs/nexum/tree/main/crates/keycard/keycard
-[`nexum-keycard-signer`]: https://github.com/nxm-rs/nexum/tree/main/crates/keycard/signer
-[`nexum-keycard-cli`]: https://github.com/nxm-rs/nexum/tree/main/crates/keycard/cli
+```bash
+# Status / select
+nexum-keycard-cli status
 
-## Features
-
-- 🔐 **Secure Channel Communication** - Encrypted and authenticated channel to the card
-- 🔑 **Key Management** - Generate, export, and manage keys on the Keycard
-- 📝 **Credential Management** - Set and update PINs, PUKs, and pairing passwords
-- 🔍 **Status Information** - Retrieve detailed info about the card status
-- 🔄 **BIP32/39 Support** - Key derivation path support and mnemonic generation
-- 📊 **Data Storage** - Store and retrieve custom data on the card
-- 📱 **Factory Reset** - Complete card reset when needed
-- 🌐 **Blockchain Integration** - Built-in support for Ethereum transaction signing
-
-## Documentation & Examples
-
-For detailed documentation on each crate, please check their individual `README` files:
-
-- [`nexum-keycard` `README`](./keycard/README.md) - Core Keycard functionality
-- [`nexum-keycard-signer` `README`](./signer/README.md) - Blockchain signer implementation
-- [`nexum-keycard-cli` `README`](./cli/README.md) - Command-line interface
-
-## Command-Line Interface
-
-nexum-keycard includes a comprehensive CLI for managing Keycards:
-
-```sh
-# List available readers
-nexum-keycard-cli list
-
-# Initialize a new card
+# Initialise a fresh card (prints PIN, PUK, pairing password ONCE)
 nexum-keycard-cli init
 
-# Generate a new key pair
-nexum-keycard-cli generate-key
+# Pair a host (interactive password prompt)
+nexum-keycard-cli pair
 
-# Sign data
-nexum-keycard-cli sign 0123456789abcdef --path m/44'/60'/0'/0/0
+# Derive Ethereum address at m/44'/60'/0'/0/0
+nexum-keycard-cli derive "m/44'/60'/0'/0/0"
+
+# Sign a precomputed 32-byte digest
+nexum-keycard-cli sign --digest 0x...
 ```
 
-## Architecture
+Pairing material persists on disk in a user-config dir; treat it as sensitive (anyone with it can talk to your card after PIN unlock).
 
-`nexum-keycard` is built on a layered architecture:
+---
 
-1. **APDU Transport Layer** - Handles low-level communication with card readers (via `nexum-apdu-*` crates)
-2. **Secure Channel Layer** - Provides encryption and authentication for sensitive operations
-3. **Keycard Command Layer** - Implements the Keycard protocol and commands
-4. **Application Layer** - High-level APIs for key management and card operations
+## Embedding (the Nexum use case)
+
+For mobile, the wallet uses a no-PC/SC build of this crate and supplies its own NFC transport in [`nxm-rs/wallet`](https://github.com/nxm-rs/wallet) under `rust/nexum-apdu-transport-nfc/`. If you target a non-PC/SC environment, gate the `pcsc` feature off and write a `CardTransport` over your channel.
+
+---
+
+## Repository layout
+
+```
+keycard/
+├── nexum-keycard/         ← core SDK
+│   └── src/
+│       ├── application.rs       ← applet wrapper (SELECT, INIT, ...)
+│       ├── commands/            ← per-instruction APDU builders
+│       ├── crypto.rs            ← key derivation, hashing
+│       ├── secure_channel.rs    ← pairing + SCP02-derived session
+│       ├── session.rs           ← session state machine
+│       ├── secrets.rs           ← PIN/PUK/pairing material
+│       ├── validation.rs        ← input invariants
+│       └── types/               ← typed responses
+├── nexum-keycard-signer/  ← alloy Signer impl
+├── nexum-keycard-cli/     ← interactive CLI
+├── scripts/               ← release / changelog tooling
+└── CHANGELOG.md           ← `git-cliff`-generated
+```
+
+---
+
+## Contributing
+
+Pre-release; APIs are still shifting. Open an issue before non-trivial PRs.
+
+- **Rust** — `cargo fmt`, `cargo clippy -- -D warnings`. MSRV 1.94.
+- **Commits** — Conventional Commits. Changelog generated by `git-cliff` from these.
+- **DCO** — `Signed-off-by` line required on contributions.
+- **No new deps** without a justification in the PR description. Smart-card code lives close to crypto — keep the attack surface small.
+
+A CLA is in [`CLA.md`](./CLA.md) and tracked in [`nxm-rs/cla-signatures`](https://github.com/nxm-rs/cla-signatures).
+
+## Security
+
+See [SECURITY.md](https://github.com/nxm-rs/.github/blob/main/SECURITY.md) on the org `.github` repo. Findings in the secure-channel handshake, pairing persistence, or APDU framing are particularly high-value — please use GitHub Security Advisories on this repo for those.
 
 ## License
 
-Licensed under the [AGPL License](./LICENSE) or http://www.gnu.org/licenses/agpl-3.0.html.
+AGPL-3.0-or-later. See [LICENSE](./LICENSE).
 
-## Contributions
-
-Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in these crates by you shall be licensed as above, without any additional terms or conditions.
+```
+●  AGPL-3.0  ·  pre-release  ·  hardware-bound signing
+```
